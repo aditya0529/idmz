@@ -1,0 +1,20 @@
+*.swp
+package-lock.json
+__pycache__
+.pytest_cache
+.venv
+*.egg-info
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+
+.idea/*
+my_client.csr
+my_client.key
+my_client.pem
+RootCA.key
+RootCA.pem
+configsrefapp.json
+cdk.context.json
