@@ -2,13 +2,13 @@ import json
 import pathlib
 import aws_cdk as core
 from typing import List
-from aws_cdk.aws_apigatewayv2_authorizers_alpha import HttpLambdaAuthorizer, HttpLambdaResponseType
+from aws_cdk.aws_apigatewayv2_authorizers import HttpLambdaAuthorizer, HttpLambdaResponseType
 from aws_cdk import Tags
 from cdk_nag import NagSuppressions
 from utils.utils import Utility
 from aws_cdk import (
-    aws_apigatewayv2_alpha as apigwv2_alpha,
-    aws_apigatewayv2_integrations_alpha as apigwv2_integrations_alpha,
+    aws_apigatewayv2 as apigwv2,
+    aws_apigatewayv2_integrations as apigwv2_integrations,
     aws_logs as logs,
     aws_ec2 as ec2,
     aws_elasticloadbalancingv2 as elbv2,
@@ -19,7 +19,7 @@ from aws_cdk import (
 
 
 def setup_vpce_integration(stack, name: str, vpc: ec2.IVpc,
-                           vpc_link: apigwv2_alpha.VpcLink,
+                           vpc_link: apigwv2.VpcLink,
                            sg_vpce: ec2.SecurityGroup,
                            sg_nlb: ec2.SecurityGroup):
     """Create the integration between an HTTP API and VPC Endpoint Service running in another account.
@@ -81,8 +81,8 @@ def setup_vpce_integration(stack, name: str, vpc: ec2.IVpc,
         response_types=[HttpLambdaResponseType.SIMPLE])
 
     # For IAM based Authorizer - Uncomment this if you want to use this feature.
-    # authorizer = apigwv2_alpha_authorizer.HttpLambdaAuthorizer(
-    #     "Authorizer", lambda_authorizer, response_types=[apigwv2_alpha_authorizer.HttpLambdaResponseType.IAM])
+    # authorizer = apigwv2_authorizer.HttpLambdaAuthorizer(
+    #     "Authorizer", lambda_authorizer, response_types=[apigwv2_authorizer.HttpLambdaResponseType.IAM])
 
     return authorizer, listener
 
@@ -282,13 +282,11 @@ def _lambda_authorizer(stack, name: str, **kwargs) -> lambda_.Function:
 
 
 def add_http_api_routes(stack, name: str,
-                        http_api: core.aws_apigatewayv2_alpha.HttpApi,
+                        http_api: apigwv2.HttpApi,
                         listener: elbv2.NetworkListener,
-                        vpc_link: apigwv2_alpha.VpcLink, routes: List[str],
-                        authorizer: core.
-                        aws_apigatewayv2_authorizers_alpha.HttpLambdaAuthorizer,
-                        integration: core.
-                        aws_apigatewayv2_integrations_alpha.HttpNlbIntegration,
+                        vpc_link: apigwv2.VpcLink, routes: List[str],
+                        authorizer: HttpLambdaAuthorizer,
+                        integration: apigwv2_integrations.HttpNlbIntegration,
                         vpce_service_tls_fqdn: str) -> List:
 
     parent_dir = pathlib.Path(__file__).parent
@@ -320,25 +318,25 @@ def add_http_api_routes(stack, name: str,
     # Add Route for /idmzhealth pointing to the health lambda
     http_api.add_routes(
         path="/idmzhealth",
-        methods=[apigwv2_alpha.HttpMethod.GET],
+        methods=[apigwv2.HttpMethod.GET],
         authorizer=authorizer,
-        integration=apigwv2_integrations_alpha.HttpLambdaIntegration(
+        integration=apigwv2_integrations.HttpLambdaIntegration(
             "idmz-httpapi-lambdaintegration-healthcheck",
             handler=idmzhealth_lambda,
             # parameter_mapping =
-            payload_format_version=apigwv2_alpha.PayloadFormatVersion.
+            payload_format_version=apigwv2.PayloadFormatVersion.
             VERSION_2_0))
 
     # API does not allow to create default route $default. It expects / in the path.
     route = []
     for i, route_key in enumerate(routes):
-        route = apigwv2_alpha.HttpRoute(
+        route = apigwv2.HttpRoute(
             stack,
             f"{name}-route-{i+1}",
             http_api=http_api,
             integration=integration,
-            route_key=apigwv2_alpha.HttpRouteKey.with_(
-                route_key, apigwv2_alpha.HttpMethod.ANY),
+            route_key=apigwv2.HttpRouteKey.with_(
+                route_key, apigwv2.HttpMethod.ANY),
             authorizer=authorizer,
         )
         integration.bind(route=route, scope=stack)

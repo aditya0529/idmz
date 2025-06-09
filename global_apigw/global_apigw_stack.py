@@ -12,11 +12,11 @@ from aws_cdk import CfnTag
 from utils.utils import Utility
 from apigw_vpce_helpers import vpce_helpers, helpers
 from aws_cdk import (
-    aws_apigatewayv2_alpha as http_api,
+    aws_apigatewayv2 as http_api,
     aws_ec2 as ec2,
     aws_certificatemanager as acm,
-    aws_apigatewayv2_integrations_alpha as apigwv2_integrations_alpha,
-    aws_apigatewayv2_alpha as apigwv2_alpha,
+    aws_apigatewayv2_integrations as apigwv2_integrations,
+    aws_apigatewayv2_authorizers as apigwv2_authorizers,
 )
 
 
@@ -49,10 +49,10 @@ class GlobalAPIGWStack(core.Stack):
             sg_nlb=sg_nlb)
 
         # NLB Integration
-        nlb_integration = apigwv2_integrations_alpha.HttpNlbIntegration(
+        nlb_integration = apigwv2_integrations.HttpNlbIntegration(
             f'{self.vpc_instance}-http-nlb-integration',
             listener=listener,
-            method=apigwv2_alpha.HttpMethod.ANY,
+            method=apigwv2.HttpMethod.ANY,
             secure_server_name=self.vpce_service_tls_fqdn,
             vpc_link=vpc_link,
         )
@@ -174,9 +174,7 @@ class GlobalAPIGWStack(core.Stack):
         return apidomain
 
     def _create_apigw_http_api(
-            self, apidomain, authorizer: core.aws_apigatewayv2_authorizers_alpha.
-            HttpLambdaAuthorizer, integration: core.
-            aws_apigatewayv2_integrations_alpha.HttpNlbIntegration):
+            self, apidomain, authorizer: apigwv2_authorizers.HttpLambdaAuthorizer, integration: apigwv2_integrations.HttpNlbIntegration):
 
         apigw_http_api = http_api.HttpApi(
             self,
