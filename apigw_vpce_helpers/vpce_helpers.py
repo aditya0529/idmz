@@ -18,7 +18,7 @@ from aws_cdk import (
 )
 
 
-def setup_vpce_integration(stack, name: str, vpc: ec2.Vpc,
+def setup_vpce_integration(stack, name: str, vpc: ec2.IVpc,
                            vpc_link: apigwv2_alpha.VpcLink,
                            sg_vpce: ec2.SecurityGroup,
                            sg_nlb: ec2.SecurityGroup):
@@ -87,7 +87,7 @@ def setup_vpce_integration(stack, name: str, vpc: ec2.Vpc,
     return authorizer, listener
 
 
-def _createvpc_endpoint(stack, name: str, vpc: ec2.Vpc,
+def _createvpc_endpoint(stack, name: str, vpc: ec2.IVpc,
                         sg_vpce: ec2.SecurityGroup,
                         cdk_custom_configs: dict) -> ec2.InterfaceVpcEndpoint:
     """Create the VPC Endpoint which connects to a VPC Endpoint service.
@@ -174,7 +174,7 @@ def _create_custom_resource(stack, name: str, **kwargs) -> core.CustomResource:
 
 
 def _create_network_target_group(
-        stack, name: str, vpc: ec2.Vpc, vpc_endpoint_ips: List[str],
+        stack, name: str, vpc: ec2.IVpc, vpc_endpoint_ips: List[str],
         cdk_custom_configs: dict) -> elbv2.NetworkTargetGroup:
 
     targets = [
@@ -205,7 +205,7 @@ def _create_network_target_group(
     )
 
 
-def _create_nlb(stack, name: str, vpc: ec2.Vpc,
+def _create_nlb(stack, name: str, vpc: ec2.IVpc,
                 target_group: elbv2.NetworkTargetGroup,
                 sg_nlb: ec2.SecurityGroup,
                 cdk_custom_configs: dict) -> elbv2.NetworkListener:
@@ -285,8 +285,9 @@ def add_http_api_routes(stack, name: str,
                         http_api: core.aws_apigatewayv2_alpha.HttpApi,
                         listener: elbv2.NetworkListener,
                         vpc_link: apigwv2_alpha.VpcLink, routes: List[str],
-                        authorizer: core.aws_apigatewayv2_authorizers_alpha.
-                        HttpLambdaAuthorizer, integration: core.
+                        authorizer: core.
+                        aws_apigatewayv2_authorizers_alpha.HttpLambdaAuthorizer,
+                        integration: core.
                         aws_apigatewayv2_integrations_alpha.HttpNlbIntegration,
                         vpce_service_tls_fqdn: str) -> List:
 
