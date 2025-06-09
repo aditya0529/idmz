@@ -16,14 +16,16 @@ class IDMZNetworkStack(core.Stack):
         # Load the custom config object
         self._cdk_custom_configs = Utility.cdk_custom_configs
 
-        # Comment out the original VPC creation and NACL configuration calls
-        # self.vpc = self._create_vpc()
-        # self._configure_nacl(self.vpc)
+        # Uncomment the original VPC creation and NACL configuration calls
+        self.vpc = self._create_vpc()
+        self._configure_nacl(self.vpc)
+        # Print statement to confirm we're creating a new VPC
+        print(f"Creating new VPC with CIDR {self._cdk_custom_configs['vpc_cidr_block']} and configuring NACL.")
 
-        # Instead, always import the existing VPC
-        self.vpc = self._import_existing_vpc()
+        # Comment out the VPC import as we're creating a new one
+        # self.vpc = self._import_existing_vpc()
         # Print statement to confirm NACL configuration is effectively disabled
-        print(f"Using imported VPC {self.vpc.vpc_id}. NACL configuration by this stack is effectively disabled as _configure_nacl is not directly called in __init__.")
+        # print(f"Using imported VPC {self.vpc.vpc_id}. NACL configuration by this stack is effectively disabled as _configure_nacl is not directly called in __init__.")
 
         # Incident Response SG
         sg_ir = self._create_security_group("sg-ir", self.vpc)
