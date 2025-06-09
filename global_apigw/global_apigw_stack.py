@@ -253,7 +253,7 @@ class GlobalAPIGWStack(core.Stack):
             vpc=vpc,
             security_groups=[sg_vpclink],
             subnets=ec2.SubnetSelection(
-                subnet_group_name="idmz-subnet-vpce1"))
+                subnet_group_name="idmz-subnet-vpclink"))
         Tags.of(vpclink).add("sw:application",
                              f"{self.cdk_custom_configs['workload']}")
 
