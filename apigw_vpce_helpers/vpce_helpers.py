@@ -138,7 +138,7 @@ def _create_custom_resource(stack, name: str, **kwargs) -> core.CustomResource:
         code=code,
         handler="handler.main_handler",
         timeout=core.Duration.seconds(15),
-        runtime=lambda_.Runtime.PYTHON_3_11,
+        runtime=lambda_.Runtime.PYTHON_3_12,
     )
     custom_resource_func.add_to_role_policy(
         iam.PolicyStatement(
@@ -256,7 +256,7 @@ def _lambda_authorizer(stack, name: str, **kwargs) -> lambda_.Function:
         stack,
         "LambdaAuthorizer",
         handler='api-gateway-lambda-http-authorizer-simple.lambda_handler',
-        runtime=lambda_.Runtime.PYTHON_3_11,
+        runtime=lambda_.Runtime.PYTHON_3_12,
         log_retention=logs.RetentionDays.TWO_WEEKS,
         timeout=core.Duration.seconds(300),
         code=code)
@@ -297,7 +297,7 @@ def add_http_api_routes(stack, name: str,
         stack,
         "IdmzHealthFunction",
         handler='handler.lambda_handler',
-        runtime=lambda_.Runtime.PYTHON_3_11,
+        runtime=lambda_.Runtime.PYTHON_3_12,
         log_retention=logs.RetentionDays.TWO_WEEKS,
         timeout=core.Duration.seconds(300),
         code=code)
