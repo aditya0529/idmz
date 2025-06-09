@@ -161,6 +161,11 @@ def _create_custom_resource(stack, name: str, **kwargs) -> core.CustomResource:
         "appliesTo": [
             "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
         ]
+    }, {
+        "id":
+            "AwsSolutions-L1",
+        "reason":
+            "Using the latest available Python runtime (3.12). CDK-nag may not recognize this as the latest.",
     }],
                                               apply_to_children=True)
 
@@ -275,6 +280,11 @@ def _lambda_authorizer(stack, name: str, **kwargs) -> lambda_.Function:
         "appliesTo": [
             "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
         ]
+    }, {
+        "id":
+            "AwsSolutions-L1",
+        "reason":
+            "Using the latest available Python runtime (3.12). CDK-nag may not recognize this as the latest.",
     }],
                                               apply_to_children=True)
 
@@ -312,6 +322,11 @@ def add_http_api_routes(stack, name: str,
         "appliesTo": [
             "Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
         ]
+    }, {
+        "id":
+            "AwsSolutions-L1",
+        "reason":
+            "Using the latest available Python runtime (3.12). CDK-nag may not recognize this as the latest.",
     }],
                                               apply_to_children=True)
 
