@@ -160,20 +160,22 @@ class GlobalAPIGWStack(core.Stack):
             hosted_zone_id=idmz_external_zone_id,
             zone_name=self.cdk_custom_configs['idmz_external_zone_name'])
 
-        # Add DNS record pointing to API Gateway Custom Domain
-        r53.ARecord(
+        # Add DNS record pointing to API Gateway Custom Domain using Latency-based routing.
+        # We use the L1 CfnRecordSet construct here to get access to the `region` and `set_identifier`
+        # properties required for latency-based routing, which aren't available in the L2 ARecord construct for alias targets.
+        r53.CfnRecordSet(
             self,
             f"r53record-{self.cdk_custom_configs['ingress_name']}",
-            target=r53.RecordTarget.from_alias(
-                r53_targets.ApiGatewayv2DomainProperties(
-                    regional_domain_name=apidomain.regional_domain_name,
-                    regional_hosted_zone_id=apidomain.regional_hosted_zone_id)
-            ),
-            zone=hostedzone,
-            comment="API Gateway Custom Domain",
-            delete_existing=False,
-            record_name=self.cdk_custom_configs['ingress_name'],
-            ttl=core.Duration.seconds(60),
+            name=ingress_external_fqdn,
+            type='A',
+            hosted_zone_id=hostedzone.hosted_zone_id,
+            region=self.region,
+            set_identifier=f"{self.cdk_custom_configs['ingress_name']}-{self.region}",
+            alias_target=r53.CfnRecordSet.AliasTargetProperty(
+                dns_name=apidomain.regional_domain_name,
+                hosted_zone_id=apidomain.regional_hosted_zone_id,
+                evaluate_target_health=False
+            )
         )
 
         return apidomain
