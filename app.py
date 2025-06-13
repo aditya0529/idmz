@@ -66,7 +66,10 @@ for region in target_regions:
                      vpc=idmz_network_stack.vpc,
                      sg_vpclink=idmz_network_stack.sg_vpclink,
                      sg_vpce=idmz_network_stack.sg_vpce,
-                     sg_nlb=idmz_network_stack.sg_nlb)
+                     sg_nlb=idmz_network_stack.sg_nlb,
+                     vpce_subnets=idmz_network_stack.vpce_subnets,
+                     nlb_subnets=idmz_network_stack.nlb_subnets,
+                     vpclink_subnets=idmz_network_stack.vpclink_subnets)
     
     # Region-specific tags can be applied here if needed, using Utility.cdk_custom_configs
     # For example:

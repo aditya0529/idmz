@@ -21,7 +21,9 @@ from aws_cdk import (
 def setup_vpce_integration(stack, name: str, vpc: ec2.IVpc,
                            vpc_link: apigwv2.VpcLink,
                            sg_vpce: ec2.SecurityGroup,
-                           sg_nlb: ec2.SecurityGroup):
+                           sg_nlb: ec2.SecurityGroup,
+                           vpce_subnets: List[ec2.ISubnet],
+                           nlb_subnets: List[ec2.ISubnet]):
     """Create the integration between an HTTP API and VPC Endpoint Service running in another account.
 
     This manages several things:
@@ -48,7 +50,7 @@ def setup_vpce_integration(stack, name: str, vpc: ec2.IVpc,
     cdk_custom_configs = Utility.cdk_custom_configs
 
     vpc_endpoint = _createvpc_endpoint(stack, name, vpc, sg_vpce,
-                                       cdk_custom_configs)
+                                       cdk_custom_configs, vpce_subnets)
 
     # The VPC Endpoint creates multiple private IP addresses across the private subnets. These are
     # needed to setup our ALB. To fetch the IPs, we need a custom CFN resource.
@@ -66,7 +68,7 @@ def setup_vpce_integration(stack, name: str, vpc: ec2.IVpc,
                                                 cdk_custom_configs)
 
     listener = _create_nlb(stack, name, vpc, target_group, sg_nlb,
-                           cdk_custom_configs)
+                           cdk_custom_configs, nlb_subnets)
 
     lambda_authorizer = _lambda_authorizer(stack, "lambda-auth")
 
@@ -89,7 +91,7 @@ def setup_vpce_integration(stack, name: str, vpc: ec2.IVpc,
 
 def _createvpc_endpoint(stack, name: str, vpc: ec2.IVpc,
                         sg_vpce: ec2.SecurityGroup,
-                        cdk_custom_configs: dict) -> ec2.InterfaceVpcEndpoint:
+                        cdk_custom_configs: dict, vpce_subnets: List[ec2.ISubnet]) -> ec2.InterfaceVpcEndpoint:
     """Create the VPC Endpoint which connects to a VPC Endpoint service.
 
     Note that the vpc.add_interface_endpoint method is slightly simpler to use, but has created
@@ -108,7 +110,7 @@ def _createvpc_endpoint(stack, name: str, vpc: ec2.IVpc,
         open=False,
         private_dns_enabled=False,
         security_groups=[sg_vpce],
-        subnets=ec2.SubnetSelection(subnet_group_name="idmz-subnet-vpce1"))
+        subnets=ec2.SubnetSelection(subnets=vpce_subnets))
 
     if eval(cdk_custom_configs['interface_vpce_policy_allowed']):
         interface_vpc_endpoint.add_to_policy(
@@ -213,7 +215,7 @@ def _create_network_target_group(
 def _create_nlb(stack, name: str, vpc: ec2.IVpc,
                 target_group: elbv2.NetworkTargetGroup,
                 sg_nlb: ec2.SecurityGroup,
-                cdk_custom_configs: dict) -> elbv2.NetworkListener:
+                cdk_custom_configs: dict, nlb_subnets: List[ec2.ISubnet]) -> elbv2.NetworkListener:
     """Create Network Load Balancer for integration to the service's API"""
 
     nlb = elbv2.NetworkLoadBalancer(
@@ -223,12 +225,11 @@ def _create_nlb(stack, name: str, vpc: ec2.IVpc,
         deletion_protection=False,
         vpc=vpc,
         internet_facing=False,
-        vpc_subnets=ec2.SubnetSelection(subnet_group_name="idmz-subnet-nlb"),
+        vpc_subnets=ec2.SubnetSelection(subnets=nlb_subnets),
     )
     Tags.of(nlb).add(
         "Name",
-        f"sw-{cdk_custom_configs['workload']}-{cdk_custom_configs['appenvironment']}-idmz-sg-nlb-{cdk_custom_configs['idmzregion']}-{cdk_custom_configs['lzenv']}-aws"
-    )
+        f"sw-{cdk_custom_configs['workload']}-{cdk_custom_configs['appenvironment']}-idmz-sg-nlb-{cdk_custom_configs['idmzregion']}-{cdk_custom_configs['lzenv']}-aws")
     Tags.of(nlb).add("sw:application", f"{cdk_custom_configs['workload']}")
 
     # Add SG to NLB using Override because CDK Construct does not support it yet

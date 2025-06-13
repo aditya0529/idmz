@@ -11,6 +11,7 @@ from aws_cdk import Tags
 from aws_cdk import CfnTag
 from utils.utils import Utility
 from apigw_vpce_helpers import vpce_helpers, helpers
+from typing import List
 from aws_cdk import (
     aws_apigatewayv2 as http_api,
     aws_ec2 as ec2,
@@ -24,7 +25,9 @@ class GlobalAPIGWStack(core.Stack):
 
     def __init__(self, scope: Construct, id: str, vpc: ec2.Vpc,
                  sg_vpclink: ec2.SecurityGroup, sg_vpce: ec2.SecurityGroup,
-                 sg_nlb: ec2.SecurityGroup, **kwargs) -> None:
+                 sg_nlb: ec2.SecurityGroup, vpce_subnets: List[ec2.ISubnet],
+                 nlb_subnets: List[ec2.ISubnet], vpclink_subnets: List[ec2.ISubnet],
+                 **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
         # Load the custom config object
@@ -39,14 +42,16 @@ class GlobalAPIGWStack(core.Stack):
             'vpce_service_tls_fqdn']
 
         apidomain = self._create_custom_domain()
-        vpc_link = self._create_vpc_link(vpc, sg_vpclink)
+        vpc_link = self._create_vpc_link(vpc, sg_vpclink, vpclink_subnets)
         authorizer, listener = vpce_helpers.setup_vpce_integration(
             self,
             name="idmz-svc",
             vpc=vpc,
             vpc_link=vpc_link,
             sg_vpce=sg_vpce,
-            sg_nlb=sg_nlb)
+            sg_nlb=sg_nlb,
+            vpce_subnets=vpce_subnets,
+            nlb_subnets=nlb_subnets)
 
         # NLB Integration
         nlb_integration = apigwv2_integrations.HttpNlbIntegration(
@@ -242,7 +247,7 @@ class GlobalAPIGWStack(core.Stack):
             format=json.dumps(logformat),
         )
 
-    def _create_vpc_link(self, vpc, sg_vpclink):
+    def _create_vpc_link(self, vpc, sg_vpclink, vpclink_subnets: List[ec2.ISubnet]):
 
         #
         # API Gateway VPC Link (for HTTP APIs)
@@ -253,7 +258,7 @@ class GlobalAPIGWStack(core.Stack):
             vpc=vpc,
             security_groups=[sg_vpclink],
             subnets=ec2.SubnetSelection(
-                subnet_group_name="idmz-subnet-vpclink"))
+                subnets=vpclink_subnets))
         Tags.of(vpclink).add("sw:application",
                              f"{self.cdk_custom_configs['workload']}")
 
